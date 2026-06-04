@@ -17,8 +17,9 @@
         }
         h1 {
             margin-top: 20px;
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             text-align: center;
+            color: #f1f5f9;
         }
         .subtitle {
             color: #8a99ad;
@@ -27,7 +28,7 @@
         }
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
             width: 100%;
             max-width: 1200px;
@@ -36,22 +37,18 @@
             background-color: #161f30;
             border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            border: 1px solid #1e293b;
         }
         .card h3 {
             margin: 0 0 15px 0;
             color: #3b82f6;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         .card p {
             margin: 0;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: bold;
             color: #e2e8f0;
         }
@@ -59,13 +56,13 @@
 </head>
 <body>
 
-    <h1>🚨 RESQ MESH COMMAND CENTER</h1>
-    <div class="subtitle">Worldwide Disaster Monitoring Dashboard</div>
+    <h1>🚨 RESQ MESH MONITORING HUB</h1>
+    <div class="subtitle">Real-Time Field Telemetry Dashboard</div>
 
     <div class="grid-container">
         <div class="card">
-            <h3>Alert Type</h3>
-            <p id="alert">Loading...</p>
+            <h3>Alert Status</h3>
+            <p id="alert">Syncing...</p>
         </div>
         <div class="card">
             <h3>Latitude</h3>
@@ -92,11 +89,85 @@
             <p id="quake">--</p>
         </div>
         <div class="card">
-            <h3>Message Tracking Log</h3>
-            <p id="node" style="font-size: 1.2rem; white-space: nowrap;">--</p>
+            <h3>Message Token Log</h3>
+            <p id="node" style="font-size: 1.15rem; color: #38bdf8;">--</p>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        async function loadData() {
+            try {
+                const liveURL = "https://api.thingspeak.com/channels/3398357/feeds.json?api_key=CVMGAOMLI4QV6W2J&results=1&nocache=" + new Date().getTime();
+                const response = await fetch(liveURL);
+                const data = await response.json();
+                
+                if (!data.feeds || data.feeds.length === 0) {
+                    document.getElementById("alert").innerText = "No Feeds Found";
+                    return;
+                }
+                
+                const feed = data.feeds[0];
+
+                // 1. Alert Status Safety Fallback (Handles both text strings and numerical flags)
+                let statusText = "Pending";
+                if (feed.field1 === "1") statusText = "🚨 HELP";
+                else if (feed.field1 === "2") statusText = "✅ SAFE";
+                else if (feed.field1 === "3") statusText = "🩺 MEDICAL";
+                else if (feed.field1 === "4") statusText = "⚠️ SENSOR ALARM";
+                else if (feed.field1) statusText = feed.field1; // If it's a raw string like "EARTHQUAKE", show it!
+                document.getElementById("alert").innerText = statusText;
+
+                // 2. Latitude & Longitude Handling
+                document.getElementById("lat").innerText = feed.field2 || "0.000000";
+                document.getElementById("lon").innerText = feed.field3 || "0.000000";
+
+                // 3. Satellites Connected
+                document.getElementById("sat").innerText = feed.field4 || "0";
+
+                // 4. Gas Handling (Checks if it contains text labels like USER1)
+                if (feed.field5) {
+                    if (isNaN(feed.field5)) {
+                        document.getElementById("gas").innerText = feed.field5; // Show raw text labels safely
+                    } else {
+                        document.getElementById("gas").innerText = feed.field5 + " ppm";
+                    }
+                } else {
+                    document.getElementById("gas").innerText = "0 ppm";
+                }
+
+                // 5. Water Clearance Level
+                document.getElementById("water").innerText = feed.field6 ? feed.field6 + " cm" : "0 cm";
+
+                // 6. Vibration Telemetry (Field 7 Protection)
+                if (feed.field7 && !isNaN(feed.field7)) {
+                    let vib = parseFloat(feed.field7);
+                    if (vib > 12.0 || vib < 7.0) {
+                        document.getElementById("quake").innerText = vib.toFixed(1) + " m/s² [SHAKE]";
+                    } else {
+                        document.getElementById("quake").innerText = vib.toFixed(1) + " m/s² [STABLE]";
+                    }
+                } else {
+                    document.getElementById("quake").innerText = feed.field7 || "0.0 m/s²";
+                }
+
+                // 7. Message Tracker Token Configuration (Field 8 Safety Layout)
+                const localTime = new Date(feed.created_at).toLocaleTimeString('en-IN', {
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+                
+                if (feed.field8) {
+                    document.getElementById("node").innerText = `#${feed.field8} @ ${localTime}`;
+                } else {
+                    document.getElementById("node").innerText = `Live @ ${localTime}`;
+                }
+
+            } catch (error) {
+                console.log("Dashboard pipeline parse error: ", error);
+            }
+        }
+
+        loadData();
+        setInterval(loadData, 5000); // 5 second sync speed
+    </script>
 </body>
 </html>
