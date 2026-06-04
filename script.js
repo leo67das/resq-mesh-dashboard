@@ -1,9 +1,15 @@
 async function loadData() {
     try {
-        // Targeted single-feed secure endpoint to perfectly handle your verified private credentials
-        const liveURL = "https://api.thingspeak.com/channels/3398357/feeds/last.json?api_key=9WWD5Y74FM6LVWCH&nocache=" + new Date().getTime();
+        // Universal clean endpoint
+        const liveURL = "https://api.thingspeak.com/channels/3398357/feeds/last.json?nocache=" + new Date().getTime();
         
-        const response = await fetch(liveURL);
+        // Pass the API key securely inside the HTTP Request Header instead of the URL string
+        const response = await fetch(liveURL, {
+            method: 'GET',
+            headers: {
+                'X-THINGSPEAKAPIKEY': '9WWD5Y74FM6LVWCH'
+            }
+        });
         
         if (!response.ok) {
             console.error("Server authentication failed. Status Code:", response.status);
