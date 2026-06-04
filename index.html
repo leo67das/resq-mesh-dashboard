@@ -57,7 +57,7 @@
 <body>
 
     <h1>🚨 RESQ MESH MONITORING HUB</h1>
-    <div class="subtitle">Real-Time Field Telemetry Dashboard</div>
+    <div class="subtitle">Real-Time Field Telemetry Dashboard (Secure Private Link)</div>
 
     <div class="grid-container">
         <div class="card">
@@ -97,21 +97,21 @@
     <script>
         async function loadData() {
             try {
-                // CLEAN PUBLIC URL: No API keys required, bypassing 400 Bad Request verification loops
-                const liveURL = "https://api.thingspeak.com/channels/3398357/feeds.json?results=1&nocache=" + new Date().getTime();
+                // SECURE PRIVATE FORMAT: Combines private folder routing with your verified Read API Key
+                const liveURL = "https://api.thingspeak.com/channels/3398357/private/feeds.json?api_key=9WWD5Y74FM6LVWCH&results=1&nocache=" + new Date().getTime();
                 
                 const response = await fetch(liveURL);
                 const data = await response.json();
                 
                 if (!data.feeds || data.feeds.length === 0) {
-                    console.log("No feeds found inside the channel feed array.");
+                    console.log("Secure channel accessed, but no telemetry feeds exist yet.");
                     return;
                 }
                 
                 const feed = data.feeds[0];
-                console.log("Live Telemetry Received:", feed);
+                console.log("Private Telemetry Authenticated & Received:", feed);
 
-                // 1. Alert Status Mapping
+                // 1. Alert Status Decoding
                 if (document.getElementById("alert")) {
                     let statusText = "Pending";
                     if (feed.field1 === "1") statusText = "🚨 HELP";
@@ -122,12 +122,12 @@
                     document.getElementById("alert").innerText = statusText;
                 }
 
-                // 2. GPS & Positioning Cards
+                // 2. Location Vectors
                 if (document.getElementById("lat")) document.getElementById("lat").innerText = feed.field2 || "0.000000";
                 if (document.getElementById("lon")) document.getElementById("lon").innerText = feed.field3 || "0.000000";
                 if (document.getElementById("sat")) document.getElementById("sat").innerText = feed.field4 || "0";
 
-                // 3. Environmental Gas Sensors
+                // 3. Environmental Air Metrics
                 if (document.getElementById("gas")) {
                     if (feed.field5) {
                         document.getElementById("gas").innerText = isNaN(feed.field5) ? feed.field5 : feed.field5 + " ppm";
@@ -136,12 +136,12 @@
                     }
                 }
 
-                // 4. Flood Water Sensors
+                // 4. Hydrology Diagnostics
                 if (document.getElementById("water")) {
                     document.getElementById("water").innerText = feed.field6 ? feed.field6 + " cm" : "0 cm";
                 }
 
-                // 5. Vibration Sensor (Field 7)
+                // 5. Vibration Spectral Data
                 if (document.getElementById("quake")) {
                     if (feed.field7 && !isNaN(feed.field7)) {
                         let vib = parseFloat(feed.field7);
@@ -155,7 +155,7 @@
                     }
                 }
 
-                // 6. Message Node Tracker (Field 8)
+                // 6. Node Verification Token Tracker
                 if (document.getElementById("node")) {
                     const localTime = new Date(feed.created_at).toLocaleTimeString('en-IN', {
                         hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -168,14 +168,13 @@
                 }
 
             } catch (error) {
-                console.error("Dashboard parser encountered a retrieval error:", error);
+                console.error("Secure data bridge failed:", error);
             }
         }
 
-        // Run instantly on layout load
+        // Initialize script loops
         loadData();
-        // Check for hardware packet feeds every 5 seconds
-        setInterval(loadData, 5000);
+        setInterval(loadData, 5000); // Refreshes dashboard every 5 seconds
     </script>
 </body>
 </html>
