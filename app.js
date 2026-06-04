@@ -27,7 +27,7 @@ async function loadData() {
       alertText = feed.field1 || "N/A";
     }
     
-    // Update elements safely if they exist on the page
+    // Inject parameters directly to corresponding DOM elements
     if(document.getElementById("alert")) document.getElementById("alert").innerText = alertText;
     if(document.getElementById("lat"))   document.getElementById("lat").innerText = feed.field2 || "N/A";
     if(document.getElementById("lon"))   document.getElementById("lon").innerText = feed.field3 || "N/A";
@@ -35,10 +35,11 @@ async function loadData() {
     if(document.getElementById("gas"))   document.getElementById("gas").innerText = feed.field5 ? feed.field5 + " ppm" : "N/A";
     if(document.getElementById("water")) document.getElementById("water").innerText = feed.field6 ? feed.field6 + " cm" : "N/A";
 
-    // 2. MPU6050 Vibration Data -> Earthquake Card (Field 7)
+    // 2. MPU6050 Vibration Data -> Output to Vibration Card (Field 7)
     if (document.getElementById("quake")) {
       if (feed.field7) {
         let vibration = parseFloat(feed.field7);
+        // ~9.8 m/s² indicates sitting still in normal gravity. Anything higher or lower is acceleration.
         if (vibration > 12.0 || vibration < 7.0) {
           document.getElementById("quake").innerText = vibration.toFixed(1) + " m/s² (SHAKE)";
         } else {
@@ -49,7 +50,7 @@ async function loadData() {
       }
     }
 
-    // 3. Message ID Token & Clock -> Node ID Card (Field 8)
+    // 3. Message ID Token & Clock -> Output to Message Tracking Card (Field 8)
     if (document.getElementById("node")) {
       const msgID = feed.field8 || "0"; 
       const localTime = new Date(feed.created_at).toLocaleTimeString('en-IN', {
@@ -65,8 +66,8 @@ async function loadData() {
   }
 }
 
-// Run immediately on page load
+// Fire data tracking immediately on page rendering
 loadData();
 
-// Check for updates automatically every 15 seconds
+// Continually poll backend channel changes every 15 seconds
 setInterval(loadData, 15000);
