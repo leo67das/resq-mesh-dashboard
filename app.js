@@ -1,72 +1,66 @@
-// Changed results=5 so the script can capture recent history logs
-const URL = "https://api.thingspeak.com/channels/3398357/feeds.json?api_key=CVMGAOMLI4QV6W2J&results=5";
+const URL = "https://api.thingspeak.com/channels/3398357/feeds.json?api_key=CVMGAOMLI4QV6W2J&results=1";
 
 async function loadData() {
   try {
     const response = await fetch(URL);
     const data = await response.json();
-    const feeds = data.feeds;
-
-    if (!feeds || feeds.length === 0) return;
-
-    // 1. UPDATE MAIN CARDS (Using the absolute latest transmission entry)
-    const latest = feeds[feeds.length - 1];
-
-    // Translate Alert Numbers into Human-Readable Text
-    let alertText = "Loading...";
-    if (latest.field1 === "1") alertText = "🚨 HELP";
-    else if (latest.field1 === "2") alertText = "✅ SAFE";
-    else if (latest.field1 === "3") alertText = "🩺 MEDICAL";
-    else if (latest.field1 === "4") alertText = "⚠️ SENSOR ALARM";
-
-    // Set Main Dashboard Card Elements
-    document.getElementById("alert").innerText = alertText;
-    document.getElementById("lat").innerText   = latest.field2 || "N/A";
-    document.getElementById("lon").innerText   = latest.field3 || "N/A";
-    document.getElementById("sat").innerText   = latest.field4 || "0";
-    document.getElementById("gas").innerText   = latest.field5 ? latest.field5 + " ppm" : "N/A";
-    document.getElementById("water").innerText = latest.field6 ? latest.field6 + " cm" : "N/A";
     
-    // Field 7 is now our Message ID tracker, Node ID remains Field 8
-    document.getElementById("node").innerText  = latest.field8 || "N/A";
+    if (!data.feeds || data.feeds.length === 0) return;
+    const feed = data.feeds[0];
 
-    // Format the hidden server timestamp into Indian Standard Time (IST)
-    const timeReceived = new Date(latest.created_at).toLocaleTimeString('en-IN');
+    // 1. Translate Alert Type (Field 1)
+    let alertText = "Loading...";
+    if (feed.field1 === "1") {
+      alertText = "🚨 HELP";
+    } else if (feed.field1 === "2") {
+      alertText = "✅ SAFE";
+    } else if (feed.field1 === "3") {
+      alertText = "🩺 MEDICAL";
+    } else if (feed.field1 === "4") {
+      alertText = "⚠️ SENSOR ALARM";
+    } else {
+      alertText = feed.field1 || "N/A";
+    }
+    document.getElementById("alert").innerText = alertText;
 
+    // 2. Map standard location and environment metrics
+    document.getElementById("lat").innerText = feed.field2 || "N/A";
+    document.getElementById("lon").innerText = feed.field3 || "N/A";
+    document.getElementById("sat").innerText = feed.field4 || "N/A";
+    document.getElementById("gas").innerText = feed.field5 ? feed.field5 + " ppm" : "N/A";
+    document.getElementById("water").innerText = feed.field6 ? feed.field6 + " cm" : "N/A";
 
-    // 2. GENERATE HISTORY (Populates a running log table if it exists in your HTML)
-    const historyTable = document.getElementById("history-rows");
-    if (historyTable) {
-      historyTable.innerHTML = ""; // Wipe older duplicate steps
-      
-      // Reverse so the newest message sits right at the top of the history list
-      [...feeds].reverse().forEach(entry => {
-        const localTime = new Date(entry.created_at).toLocaleTimeString('en-IN');
-        let entryAlert = "HELP";
-        if (entry.field1 === "2") entryAlert = "SAFE";
-        if (entry.field1 === "3") entryAlert = "MEDICAL";
-        if (entry.field1 === "4") entryAlert = "SENSOR ALERT";
-
-        const row = `
-          <tr style="border-bottom: 1px solid #2e3b5e;">
-            <td style="padding: 10px; color: #3b82f6;">#${entry.field7 || "N/A"}</td>
-            <td>${localTime}</td>
-            <td>Node ${entry.field8 || "N/A"}</td>
-            <td>${entryAlert}</td>
-            <td>${entry.field5 || "0"} ppm / ${entry.field6 || "0"} cm</td>
-          </tr>
-        `;
-        historyTable.innerHTML += row;
-      });
+    // 3. EARTHQUAKE CARD: Displays MPU6050 Vibration Vector from Field 7
+    if (feed.field7) {
+      let vibration = parseFloat(feed.field7);
+      // 9.8 m/s² is normal static Earth gravity. Sudden changes mean shaking.
+      if (vibration > 12.0 || vibration < 7.0) {
+        document.getElementById("quake").innerText = vibration.toFixed(1) + " m/s² (SHAKE)";
+      } else {
+        document.getElementById("quake").innerText = vibration.toFixed(1) + " m/s² (STABLE)";
+      }
+    } else {
+      document.getElementById("quake").innerText = "N/A";
     }
 
+    // 4. REPURPOSED NODE ID CARD: Displays Message ID & Local Time (IST)
+    const msgID = feed.field8 || "0"; 
+    const localTime = new Date(feed.created_at).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
+    // Injects the tracking token directly into your existing Node ID card layout
+    document.getElementById("node").innerText = `#${msgID} @ ${localTime}`;
+
   } catch (error) {
-    console.log("Dashboard fetch error: ", error);
+    console.log("Error updating dashboard parameters: ", error);
   }
 }
 
 // Initial immediate launch trigger
 loadData();
 
-// Refreshes the dashboard cards automatically every 15 seconds
+// Continually pull fresh updates every 15 seconds
 setInterval(loadData, 15000);
