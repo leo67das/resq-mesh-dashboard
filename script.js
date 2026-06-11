@@ -3,38 +3,65 @@ const READ_API_KEY = "CVMGAOMLI4QV6W2J";
 
 async function updateDashboard() {
   try {
-    const url =
-      `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=1`;
+    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=1`;
 
     const res = await fetch(url);
-    const data = await res.json();
+    const json = await res.json();
 
-    const feed = data.feeds[0];
+    const feed = json.feeds && json.feeds.length > 0 ? json.feeds[0] : null;
 
-    console.log("FEED:", feed);
+    if (!feed) {
+      console.log("No feed data");
+      return;
+    }
 
-    document.getElementById("alert").innerText = feed.field1 || "--";
-    document.getElementById("lat").innerText   = feed.field2 || "--";
-    document.getElementById("lon").innerText   = feed.field3 || "--";
-    document.getElementById("sat").innerText   = feed.field4 || "--";
-    document.getElementById("gas").innerText   = feed.field5 || "--";
-    document.getElementById("water").innerText = feed.field6 || "--";
-    document.getElementById("quake").innerText = feed.field7 || "--";
-    document.getElementById("node").innerText  = feed.field8 || "--";
+    console.log("LIVE FEED:", feed);
 
-    // ALERT COLOR FIX
-    const a = (feed.field1 || "").toUpperCase();
-    const box = document.getElementById("alert");
+    // SAFE DOM UPDATE (prevents undefined crashes)
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = val ?? "--";
+    };
 
-    if (a === "SOS") box.style.color = "red";
-    else if (a === "MEDICAL") box.style.color = "orange";
-    else if (a === "SAFE") box.style.color = "green";
-    else box.style.color = "black";
+    set("alert", feed.field1);
+    set("lat", feed.field2);
+    set("lon", feed.field3);
+    set("sat", feed.field4);
+    set("gas", feed.field5);
+    set("water", feed.field6);
+    set("quake", feed.field7);
+    set("node", feed.field8);
 
-  } catch (e) {
-    console.error("Dashboard error:", e);
+    // ALERT COLOR
+    const alertBox = document.getElementById("alert");
+    if (alertBox) {
+      const a = (feed.field1 || "").toUpperCase();
+
+      if (a === "SOS") {
+        alertBox.style.color = "red";
+        alertBox.style.fontWeight = "bold";
+      } 
+      else if (a === "MEDICAL") {
+        alertBox.style.color = "orange";
+        alertBox.style.fontWeight = "bold";
+      } 
+      else if (a === "SAFE") {
+        alertBox.style.color = "green";
+        alertBox.style.fontWeight = "bold";
+      } 
+      else {
+        alertBox.style.color = "black";
+        alertBox.style.fontWeight = "normal";
+      }
+    }
+
+  } catch (err) {
+    console.error("THING ERROR:", err);
   }
 }
 
-setInterval(updateDashboard, 5000);
-updateDashboard();
+// 🔥 CRITICAL FIX: wait for HTML to load
+window.addEventListener("load", () => {
+  updateDashboard();
+  setInterval(updateDashboard, 5000);
+});
