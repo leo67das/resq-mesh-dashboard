@@ -4,7 +4,8 @@ const READ_API_KEY = "CVMGAOMLI4QV6W2J";
 async function updateDashboard() {
   try {
     const url =
-      `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=1`;
+      `https://api.thingspeak.com/channels/${3398357}/feeds.json?api_key=${
+CVMGAOMLI4QV6W2J}&results=1`;
 
     const res = await fetch(url);
 
