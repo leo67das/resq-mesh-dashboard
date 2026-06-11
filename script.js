@@ -4,50 +4,37 @@ const READ_API_KEY = "CVMGAOMLI4QV6W2J";
 async function updateDashboard() {
   try {
     const url =
-      `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json?api_key=${READ_API_KEY}`;
+      `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=1`;
 
     const res = await fetch(url);
     const data = await res.json();
 
-    console.log("DATA:", data);
+    const feed = data.feeds[0];
 
-    // ================== FIXED FIELD MAPPING ==================
-    document.getElementById("alert").innerText = data.field1 ?? "--";
-    document.getElementById("lat").innerText   = data.field2 ?? "--";
-    document.getElementById("lon").innerText   = data.field3 ?? "--";
-    document.getElementById("sat").innerText   = data.field4 ?? "--";
-    document.getElementById("gas").innerText   = data.field5 ?? "--";
-    document.getElementById("water").innerText = data.field6 ?? "--";
-    document.getElementById("quake").innerText = data.field7 ?? "--";
-    document.getElementById("node").innerText  = data.field8 ?? "--";
+    console.log("FEED:", feed);
 
-    // ================== ALERT STATUS COLOR ==================
-    const alertBox = document.getElementById("alert");
+    document.getElementById("alert").innerText = feed.field1 || "--";
+    document.getElementById("lat").innerText   = feed.field2 || "--";
+    document.getElementById("lon").innerText   = feed.field3 || "--";
+    document.getElementById("sat").innerText   = feed.field4 || "--";
+    document.getElementById("gas").innerText   = feed.field5 || "--";
+    document.getElementById("water").innerText = feed.field6 || "--";
+    document.getElementById("quake").innerText = feed.field7 || "--";
+    document.getElementById("node").innerText  = feed.field8 || "--";
 
-    let alertVal = (data.field1 || "").toUpperCase();
+    // ALERT COLOR FIX
+    const a = (feed.field1 || "").toUpperCase();
+    const box = document.getElementById("alert");
 
-    if (alertVal === "SOS") {
-      alertBox.style.color = "red";
-      alertBox.style.fontWeight = "bold";
-    }
-    else if (alertVal === "MEDICAL") {
-      alertBox.style.color = "orange";
-      alertBox.style.fontWeight = "bold";
-    }
-    else if (alertVal === "SAFE") {
-      alertBox.style.color = "green";
-      alertBox.style.fontWeight = "bold";
-    }
-    else {
-      alertBox.style.color = "black";
-      alertBox.style.fontWeight = "normal";
-    }
+    if (a === "SOS") box.style.color = "red";
+    else if (a === "MEDICAL") box.style.color = "orange";
+    else if (a === "SAFE") box.style.color = "green";
+    else box.style.color = "black";
 
-  } catch (err) {
-    console.error("Dashboard error:", err);
+  } catch (e) {
+    console.error("Dashboard error:", e);
   }
 }
 
-// ⏱ auto refresh every 5 seconds
 setInterval(updateDashboard, 5000);
 updateDashboard();
