@@ -13,7 +13,7 @@ async function updateDashboard() {
         const response = await fetch(url);
 
         if (!response.ok) {
-            throw new Error("HTTP Error");
+            throw new Error("ThingSpeak Connection Failed");
         }
 
         const data = await response.json();
@@ -45,37 +45,64 @@ async function updateDashboard() {
         document.getElementById("quake").innerText =
             feed.field7 || "--";
 
-        document.getElementById("node").innerText =
-            feed.field8 || "--";
+        const magnitude = parseFloat(feed.field8 || 0);
 
-        document.getElementById("time").innerText =
-            new Date(feed.created_at).toLocaleString();
+        let quakeText = "Normal";
+
+        if (magnitude >= 2 && magnitude < 4) {
+            quakeText = `Weak (${magnitude.toFixed(1)} M)`;
+        }
+        else if (magnitude >= 4 && magnitude < 6) {
+            quakeText = `Strong (${magnitude.toFixed(1)} M)`;
+        }
+        else if (magnitude >= 6) {
+            quakeText = `Severe (${magnitude.toFixed(1)} M)`;
+        }
+
+        const quakeBox = document.getElementById("quakeLevel");
+
+        quakeBox.innerText = quakeText;
+
+        if (magnitude < 2) {
+            quakeBox.style.color = "lime";
+        }
+        else if (magnitude < 4) {
+            quakeBox.style.color = "yellow";
+        }
+        else if (magnitude < 6) {
+            quakeBox.style.color = "orange";
+        }
+        else {
+            quakeBox.style.color = "red";
+        }
 
         const status = document.getElementById("status");
         status.innerText = "ONLINE";
         status.className = "online";
 
-        const alertBox = document.getElementById("alert");
-        const sosBanner = document.getElementById("sosBanner");
-
         const alertText = (feed.field1 || "").toUpperCase();
+
+        const sosBanner = document.getElementById("sosBanner");
 
         if (
             alertText.includes("SOS") ||
+            alertText.includes("HELP") ||
             alertText.includes("EMERGENCY") ||
-            alertText.includes("HELP")
+            alertText.includes("EARTHQUAKE")
         ) {
 
-            alertBox.className = "alert-sos";
             sosBanner.style.display = "block";
 
             if (previousAlert !== alertText) {
 
                 try {
+
                     const audio = new Audio(
                         "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
                     );
+
                     audio.play();
+
                 } catch (e) {}
 
                 previousAlert = alertText;
@@ -83,7 +110,6 @@ async function updateDashboard() {
 
         } else {
 
-            alertBox.className = "alert-normal";
             sosBanner.style.display = "none";
         }
 
@@ -93,6 +119,7 @@ async function updateDashboard() {
         console.error(error);
 
         const status = document.getElementById("status");
+
         status.innerText = "OFFLINE";
         status.className = "offline";
     }
