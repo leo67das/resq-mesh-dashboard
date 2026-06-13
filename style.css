@@ -5,10 +5,9 @@
 }
 
 body{
-    font-family:Arial, Helvetica, sans-serif;
+    font-family:Arial, sans-serif;
     background:#0b111e;
     color:white;
-    min-height:100vh;
     padding:20px;
 }
 
@@ -22,8 +21,6 @@ h1{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     gap:15px;
-    max-width:1200px;
-    margin:auto;
 }
 
 .card{
@@ -32,49 +29,35 @@ h1{
     border-radius:12px;
     padding:20px;
     text-align:center;
-    transition:0.3s;
-}
-
-.card:hover{
-    transform:translateY(-3px);
 }
 
 .card h3{
     color:#3b82f6;
     margin-bottom:10px;
-    text-transform:uppercase;
-    font-size:14px;
 }
 
 .card p{
     font-size:22px;
     font-weight:bold;
-    word-break:break-word;
+    word-wrap:break-word;
 }
 
 .sos-banner{
     display:none;
-    text-align:center;
     background:red;
     color:white;
-    font-size:28px;
-    font-weight:bold;
     padding:15px;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
     margin-bottom:20px;
     border-radius:10px;
-    animation:flash 1s infinite;
-}
-
-@keyframes flash{
-    0%{opacity:1;}
-    50%{opacity:0.3;}
-    100%{opacity:1;}
 }
 
 .online{
-    color:#00ff66;
+    color:lime;
 }
 
 .offline{
-    color:#ff3333;
+    color:red;
 }
