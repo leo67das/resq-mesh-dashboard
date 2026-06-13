@@ -49,7 +49,6 @@ h1{
 .card p{
     font-size:22px;
     font-weight:bold;
-    word-wrap:break-word;
 }
 
 .sos-banner{
@@ -76,13 +75,5 @@ h1{
 }
 
 .offline{
-    color:#ff3333;
-}
-
-.alert-normal{
-    color:#00ff66;
-}
-
-.alert-sos{
     color:#ff3333;
 }
