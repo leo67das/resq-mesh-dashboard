@@ -32,47 +32,51 @@ async function updateDashboard() {
         document.getElementById("messageSignal").textContent =
             feed.field7 || "--";
 
-        const magnitude = parseFloat(feed.field8);
+        const alertType = (feed.field1 || "").toUpperCase();
+        const magnitude = parseFloat(feed.field8 || 0);
 
-        let quakeLevel = "--";
+        let quakeText = "No Seismic Activity";
 
-        if (!isNaN(magnitude)) {
+        if (alertType === "EARTHQUAKE") {
 
             if (magnitude < 2) {
-                quakeLevel = `Normal (${magnitude})`;
+                quakeText = `Normal (${magnitude.toFixed(1)} M)`;
             }
             else if (magnitude < 4) {
-                quakeLevel = `Weak (${magnitude})`;
+                quakeText = `Weak (${magnitude.toFixed(1)} M)`;
             }
             else if (magnitude < 6) {
-                quakeLevel = `Strong (${magnitude})`;
+                quakeText = `Strong (${magnitude.toFixed(1)} M)`;
             }
             else {
-                quakeLevel = `Severe (${magnitude})`;
+                quakeText = `Severe (${magnitude.toFixed(1)} M)`;
             }
         }
 
         document.getElementById("quakeLevel").textContent =
-            quakeLevel;
+            quakeText;
 
         const status = document.getElementById("status");
         status.textContent = "ONLINE";
         status.className = "online";
 
-        const alert = (feed.field1 || "").toUpperCase();
+        const banner = document.getElementById("sosBanner");
 
         if (
-            alert.includes("SOS") ||
-            alert.includes("FLOOD") ||
-            alert.includes("EARTHQUAKE") ||
-            alert.includes("GAS")
+            alertType === "SOS" ||
+            alertType === "FLOOD" ||
+            alertType === "GAS_LEAK" ||
+            alertType === "EARTHQUAKE"
         ) {
-            document.getElementById("sosBanner").style.display = "block";
-        } else {
-            document.getElementById("sosBanner").style.display = "none";
+            banner.style.display = "block";
+            banner.textContent = `🚨 ${alertType} ALERT 🚨`;
+        }
+        else {
+            banner.style.display = "none";
         }
 
-    } catch (err) {
+    }
+    catch (err) {
 
         document.getElementById("status").textContent = "OFFLINE";
         document.getElementById("status").className = "offline";
