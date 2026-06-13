@@ -49,6 +49,7 @@ h1{
 .card p{
     font-size:22px;
     font-weight:bold;
+    word-break:break-word;
 }
 
 .sos-banner{
