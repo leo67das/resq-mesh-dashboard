@@ -42,37 +42,40 @@ async function updateDashboard() {
         document.getElementById("water").innerText =
             feed.field6 || "--";
 
-        document.getElementById("quake").innerText =
+        document.getElementById("messageSignal").innerText =
             feed.field7 || "--";
 
-        const magnitude = parseFloat(feed.field8 || 0);
-
-        let quakeText = "Normal";
-
-        if (magnitude >= 2 && magnitude < 4) {
-            quakeText = `Weak (${magnitude.toFixed(1)} M)`;
-        }
-        else if (magnitude >= 4 && magnitude < 6) {
-            quakeText = `Strong (${magnitude.toFixed(1)} M)`;
-        }
-        else if (magnitude >= 6) {
-            quakeText = `Severe (${magnitude.toFixed(1)} M)`;
-        }
+        const magnitude = Number(feed.field8);
 
         const quakeBox = document.getElementById("quakeLevel");
 
-        quakeBox.innerText = quakeText;
+        if (isNaN(magnitude)) {
 
-        if (magnitude < 2) {
+            quakeBox.innerText = "No Data";
+            quakeBox.style.color = "white";
+
+        } else if (magnitude < 2) {
+
+            quakeBox.innerText =
+                `Normal (${magnitude.toFixed(1)} M)`;
             quakeBox.style.color = "lime";
-        }
-        else if (magnitude < 4) {
+
+        } else if (magnitude < 4) {
+
+            quakeBox.innerText =
+                `Weak (${magnitude.toFixed(1)} M)`;
             quakeBox.style.color = "yellow";
-        }
-        else if (magnitude < 6) {
+
+        } else if (magnitude < 6) {
+
+            quakeBox.innerText =
+                `Strong (${magnitude.toFixed(1)} M)`;
             quakeBox.style.color = "orange";
-        }
-        else {
+
+        } else {
+
+            quakeBox.innerText =
+                `Severe (${magnitude.toFixed(1)} M)`;
             quakeBox.style.color = "red";
         }
 
@@ -80,30 +83,23 @@ async function updateDashboard() {
         status.innerText = "ONLINE";
         status.className = "online";
 
-        const alertText = (feed.field1 || "").toUpperCase();
+        const alertText =
+            (feed.field1 || "").toUpperCase();
 
-        const sosBanner = document.getElementById("sosBanner");
+        const sosBanner =
+            document.getElementById("sosBanner");
 
         if (
             alertText.includes("SOS") ||
             alertText.includes("HELP") ||
             alertText.includes("EMERGENCY") ||
-            alertText.includes("EARTHQUAKE")
+            alertText.includes("EARTHQUAKE") ||
+            alertText.includes("FLOOD")
         ) {
 
             sosBanner.style.display = "block";
 
             if (previousAlert !== alertText) {
-
-                try {
-
-                    const audio = new Audio(
-                        "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
-                    );
-
-                    audio.play();
-
-                } catch (e) {}
 
                 previousAlert = alertText;
             }
@@ -118,7 +114,8 @@ async function updateDashboard() {
 
         console.error(error);
 
-        const status = document.getElementById("status");
+        const status =
+            document.getElementById("status");
 
         status.innerText = "OFFLINE";
         status.className = "offline";
@@ -126,5 +123,4 @@ async function updateDashboard() {
 }
 
 updateDashboard();
-
 setInterval(updateDashboard, 5000);
